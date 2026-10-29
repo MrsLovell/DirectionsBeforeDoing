@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workplace Challenge</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#17202a; --muted:#5f6b76; --border:#d8dee4;
+  --accent:#315f72; --accent2:#e8f0f3; --bad:#9b2c2c; --good:#276749;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+button,input,select{font:inherit}
+button{min-height:44px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);padding:10px 14px;cursor:pointer}
+button:hover{background:#f6f8fa}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #8ab4c4;outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.secondary{background:var(--accent2);border-color:#b9cbd2}
+button.danger{color:#7a2525}
+button.choice{width:100%;text-align:left;position:relative;padding-right:42px}
+button.choice.selected{background:var(--accent2);border:2px solid var(--accent);font-weight:700}
+button.choice.selected::after{content:"✓";position:absolute;right:14px;font-weight:800}
+.wrap{max-width:850px;margin:0 auto;padding:24px 16px 48px}
+.header{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:clamp(1.55rem,4vw,2.2rem);margin:0 0 3px}
+h2{font-size:1.15rem;margin:0 0 10px}
+p{margin:6px 0}
+.muted{color:var(--muted)}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.pill{border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 10px;font-size:.9rem}
+.progress{height:10px;background:#dfe5e8;border-radius:999px;overflow:hidden;margin:12px 0 22px}
+.progress>div{height:100%;background:var(--accent);transition:width .2s ease}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin:14px 0}
+.directions{font-size:1.08rem}
+.reference{background:#f8fafb}
+.reference table{border-collapse:collapse;width:100%;margin-top:8px}
+.reference th,.reference td{border:1px solid var(--border);padding:8px;text-align:left}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choice-list-vertical{display:grid;grid-template-columns:1fr;gap:10px}
+.choice-list-horizontal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.choice-list-horizontal .choice{width:auto;min-width:0}
+@media(max-width:560px){.choice-list-horizontal{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.choice-list-horizontal .choice{width:auto;min-width:0;padding-left:7px;padding-right:7px}}
+
+.choice-column{display:grid;grid-template-columns:1fr;gap:10px;max-width:360px}
+.choice-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.green-button{background:#2e7d32!important;color:#fff!important;border-color:#1b5e20!important;font-weight:700}
+.reference.narrow-ref table{width:auto;min-width:330px;max-width:520px}
+.reference.narrow-ref{overflow-x:auto}
+.stack{display:grid;gap:10px}
+.field{display:grid;gap:5px}
+.field input,.field select{width:100%;min-height:44px;border:1px solid #aeb8c1;border-radius:8px;padding:9px;background:#fff;color:var(--text)}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.feedback{min-height:26px;margin-top:12px;font-weight:700}
+.feedback.bad{color:var(--bad)}
+.feedback.good{color:var(--good)}
+.helpbox{border-left:5px solid var(--accent);background:#f8fafb}
+.order-list{display:grid;gap:9px}
+.order-row{display:grid;grid-template-columns:38px 1fr auto;gap:9px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:8px}
+.order-num{font-weight:800;text-align:center}
+.order-controls{display:flex;gap:5px}
+.order-controls button{min-width:44px;padding:7px}
+.hidden{display:none!important}
+.startbox{max-width:620px;margin:40px auto}
+.startbox input{width:100%;min-height:46px;border:1px solid #aeb8c1;border-radius:9px;padding:10px;margin:8px 0 14px}
+.results table{border-collapse:collapse;width:100%;margin-top:10px}
+.results th,.results td{border-bottom:1px solid var(--border);padding:9px;text-align:left}
+.small{font-size:.9rem}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.wrap{padding:16px 12px 36px}.card{padding:14px}.order-row{grid-template-columns:32px 1fr}.order-controls{grid-column:2;justify-content:flex-start}}
+
+.position-row{
+ display:flex;
+ flex-direction:row;
+ flex-wrap:nowrap;
+ gap:10px;
+ width:100%;
+}
+.position-row .choice{
+ flex:1 1 0;
+ width:0;
+ min-width:0;
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+<section id="startScreen" class="startbox card">
+  <h1>Workplace Challenge</h1>
+  <p class="muted">Read → Do → Check → Then move on.</p>
+  <div class="field" style="margin-top:18px">
+    <label for="studentName"><strong>Your name</strong></label>
+    <input id="studentName" autocomplete="off" maxlength="60">
+  </div>
+  <button id="startBtn" class="primary" type="button">Start Challenge</button>
+  <p id="startMessage" class="feedback bad" aria-live="polite"></p>
+</section>
+
+<section id="gameScreen" class="hidden">
+  <div class="header">
+    <div><h1>Workplace Challenge</h1><p class="muted">Read → Do → Check → Then move on.</p></div>
+    <div class="stats">
+      <span id="levelStat" class="pill"></span>
+      <span id="mistakeStat" class="pill"></span>
+      <span id="helpStat" class="pill"></span>
+    </div>
+  </div>
+  <div class="progress" aria-label="Challenge progress"><div id="progressBar"></div></div>
+
+  <section class="card">
+    <h2>Directions</h2>
+    <div id="directions" class="directions"></div>
+  </section>
+
+  <section id="referenceCard" class="card reference hidden">
+    <h2 id="referenceTitle">Reference</h2>
+    <div id="reference"></div>
+  </section>
+
+  <section class="card">
+    <h2>Do the task</h2>
+    <div id="taskArea"></div>
+    <div id="feedback" class="feedback" aria-live="polite"></div>
+    <div class="actions">
+      <button id="checkBtn" class="primary" type="button">Check My Work</button>
+      <button id="resetLevelBtn" class="secondary" type="button">Start This Level Over</button>
+      <button id="helpBtn" type="button">I Need Help</button>
+      <button id="restartBtn" class="danger" type="button">Restart Whole Game</button>
+    </div>
+  </section>
+
+  <section id="helpPanel" class="card helpbox hidden">
+    <h2>Before asking for help:</h2>
+    <ol>
+      <li>Reread the directions from the beginning.</li>
+      <li>Look at all of the information provided on the screen.</li>
+      <li>Check what you have already tried.</li>
+      <li>If you think you may have done a step in the wrong order, clicked something you should not have clicked, or want a clean start, use <strong>Start This Level Over</strong>. It clears your work on this level so you can reread the directions and try the steps again from the beginning.</li>
+    </ol>
+    <p>You can try again on your own, or ask for help if you still need it.</p>
+    <div class="actions">
+      <button id="tryAgainBtn" class="secondary" type="button">Try Again</button>
+      <button id="askAnywayBtn" type="button">Ask for Help Anyway</button>
+    </div>
+    <p id="helpMessage" class="feedback" aria-live="polite"></p>
+  </section>
+
+  <p class="muted small">The computer will tell you when something does not match the directions. It will not tell you which part.</p>
+</section>
+
+<section id="resultScreen" class="hidden results">
+  <div class="card">
+    <h1>Challenge Complete</h1>
+    <p id="resultName"></p>
+    <div class="stats" style="margin:14px 0">
+      <span class="pill">Levels completed: 15</span>
+      <span id="resultMistakes" class="pill"></span>
+      <span id="resultHelp" class="pill"></span>
+    </div>
+    <h2>Skill Breakdown</h2>
+    <div id="skillResults"></div>
+    <div class="actions">
+      <button id="downloadBtn" class="primary" type="button">Download Results</button>
+      <button id="playAgainBtn" class="secondary hidden" type="button">Play Again</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+(() => {
+"use strict";
+
+/* Weaponized Literalism Constitution:
+   1) The validator enforces only what the written directions require.
+   2) Action history matters ONLY when the directions make the process/order relevant.
+   3) If a final-state task is corrected before Check My Work, the corrected final state counts.
+*/
+
+const SKILL_LABELS = {
+  READ_ALL:"Read All Directions", DETAILS:"Attention to Details", COMPLETE_ALL:"Complete All Steps",
+  SEQUENCE:"Follow a Sequence", ACTION_HISTORY:"Follow the Process", DO_NOT:"Follow Do-Not Directions",
+  INHIBITION:"Stop & Think", POSITION:"Position vs. Label", UPDATE_DIRECTION:"Update Directions",
+  CONDITIONAL:"Follow Conditional Directions", USE_REFERENCE:"Use a Reference",
+  LOCATE_INFORMATION:"Locate Information", COMPARE:"Compare Information", CHECK_WORK:"Check Work",
+  RETURN_REPORT:"Return / Report Back", TRY_BEFORE_HELP:"Try Before Asking for Help",
+  MULTIPLE_CONSTRAINTS:"Follow Multiple Rules", WORKPLACE:"Workplace Independence"
+};
+
+const choice = (id, directions, options, correct, skills, extra={}) => ({
+  id,directions,type:"choice",options,correct,skills,...extra
+});
+const textQ = (id,directions,fields,validate,skills,extra={}) => ({
+  id,directions,type:"fields",fields,validate,skills,...extra
+});
+const processQ = (id,directions,options,expected,skills,extra={}) => ({
+  id,directions,type:"process",options,expected,skills,...extra
+});
+const refHTML = (title, html) => ({referenceTitle:title, reference:html});
+
+const easy = [
+choice("E1","Select only <strong>Gloves</strong> and <strong>Gowns</strong>.",["Gloves","Gowns","Masks"],["Gloves","Gowns"],["READ_ALL"]),
+textQ("E2","Type <strong>READY</strong> using all capital letters.",[{id:"answer",label:"Answer"}],v=>v.answer==="READY",["DETAILS"]),
+choice("E3","Select only <strong>Monday</strong> and <strong>Thursday</strong>.",["Monday","Tuesday","Wednesday","Thursday","Friday"],["Monday","Thursday"],["COMPLETE_ALL"]),
+textQ("E4","Type <strong>24</strong> in the first box. Leave the second box empty.",[{id:"box1",label:"First box"},{id:"box2",label:"Second box"}],v=>v.box1==="24"&&v.box2==="",["COMPLETE_ALL"]),
+choice("E5","Select only <strong>Blue</strong>.",["Blue","Green","Red"],["Blue"],["READ_ALL"]),
+textQ("E6","Type <strong>work</strong> using only lowercase letters.",[{id:"answer",label:"Answer"}],v=>v.answer==="work",["DETAILS"]),
+processQ("E7","Select <strong>Badge</strong>, then select <strong>Keys</strong>.",["Keys","Badge"],["select:Badge","select:Keys"],["SEQUENCE"]),
+textQ("E8","Choose <strong>Good</strong> from the <strong>Menu</strong> dropdown. Then type <strong>7</strong> in the box labeled <strong>Number</strong>.",
+ [{id:"rating",label:"Menu",kind:"select",options:["","Good","Okay","Needs Work"]},{id:"number",label:"Number"}],
+ v=>v.rating==="Good"&&v.number==="7",["COMPLETE_ALL"]),
+choice("E9","Select every box labeled <strong>Clean</strong>. Leave all other boxes unselected.",
+ [{label:"Clean",key:"Clean-1"},{label:"Done",key:"Done"},{label:"Clean",key:"Clean-2"},{label:"Wait",key:"Wait"}],
+ ["Clean-1","Clean-2"],["DETAILS"]),
+choice("E10","Select <strong>Cart</strong> and <strong>Clipboard</strong>. Leave <strong>Phone</strong> unselected.",["Cart","Clipboard","Phone"],["Cart","Clipboard"],["DO_NOT"]),
+textQ("E11","Type your first name. Do not add anything else.",[{id:"name",label:"First name"}],v=>sameAsStudentName(v.name),["DETAILS"]),
+choice("E12","Select only the <strong>first button</strong>.",[{label:"ONE",key:"pos1"},{label:"TWO",key:"pos2"},{label:"THREE",key:"pos3"}],["pos1"],["POSITION"],{choiceLayout:"vertical"}),
+textQ("E13","Type <strong>12</strong> in the box labeled <strong>Quantity</strong>. Leave the box labeled <strong>Notes</strong> empty.",
+ [{id:"quantity",label:"Quantity"},{id:"notes",label:"Notes"}],v=>v.quantity==="12"&&v.notes==="",["COMPLETE_ALL"]),
+processQ("E14","Select <strong>Start</strong>, then select <strong>Finish</strong>.",["Finish","Start"],["select:Start","select:Finish"],["SEQUENCE"]),
+choice("E15","Select only <strong>Tuesday</strong>. Then click the <strong>Check My Work</strong> button.",["Monday","Tuesday","Wednesday"],["Tuesday"],["READ_ALL"])
+];
+
+const medium = [
+processQ("M1","Select <strong>CAT</strong> first. Select <strong>DOG</strong> second. Then unselect <strong>CAT</strong>. Leave DOG selected.",["DOG","CAT"],["select:CAT","select:DOG","unselect:CAT"],["ACTION_HISTORY","SEQUENCE"]),
+choice("M2","Select only the <strong>second button</strong>, not the button labeled SECOND.",
+ [{label:"SECOND",key:"pos1"},{label:"FIRST",key:"pos2"},{label:"THIRD",key:"pos3"}],["pos2"],["POSITION","INHIBITION"],{choiceLayout:"horizontal"}),
+{
+ id:"M3", directions:"Type <strong>WORK</strong>. Select <strong>FINISHED</strong>. Change WORK to <strong>DONE</strong>. Then unselect FINISHED.",
+ type:"staged", skills:["ACTION_HISTORY","SEQUENCE"],
+ render(ctx){
+   ctx.innerHTML='<div class="field"><label for="workbox"><strong>Text box</strong></label><input id="workbox"></div><div style="margin-top:10px"><button type="button" class="choice" data-key="FINISHED">FINISHED</button></div>';
+ },
+ init(root,state){
+   state.stage=0; state.finished=false;
+   const input=root.querySelector("#workbox"), btn=root.querySelector("[data-key='FINISHED']");
+   input.addEventListener("input",()=>{ if(state.stage===0 && input.value==="WORK") state.stage=1; if(state.stage===2 && input.value==="DONE") state.stage=3; });
+   btn.addEventListener("click",()=>{ state.finished=!state.finished; btn.classList.toggle("selected",state.finished);
+     if(state.stage===1&&state.finished) state.stage=2; else if(state.stage===3&&!state.finished) state.stage=4; });
+ },
+ validate(root,state){ return state.stage===4 && root.querySelector("#workbox").value==="DONE" && !state.finished; }
+},
+processQ("M4","Select <strong>Badge → Keys → Lunchbox</strong> in that order.",["Lunchbox","Badge","Keys"],["select:Badge","select:Keys","select:Lunchbox"],["ACTION_HISTORY","SEQUENCE"]),
+choice("M5","Select every day <strong>except Wednesday</strong>.",["Monday","Tuesday","Wednesday","Thursday","Friday"],["Monday","Tuesday","Thursday","Friday"],["DO_NOT"]),
+{
+ id:"M6",directions:"Type <strong>25 in Box 3</strong>, <strong>10 in Box 1</strong>, then <strong>15 in Box 2</strong>.",type:"fieldSequence",skills:["SEQUENCE"],
+ fields:[{id:"box1",label:"Box 1"},{id:"box2",label:"Box 2"},{id:"box3",label:"Box 3"}],
+ expected:[["box3","25"],["box1","10"],["box2","15"]]
+},
+processQ("M7","Select <strong>Gloves</strong>. Select <strong>Masks</strong>. Unselect <strong>Gloves</strong>. Select <strong>Gowns</strong>.",
+ ["Gowns","Masks","Gloves"],["select:Gloves","select:Masks","unselect:Gloves","select:Gowns"],["ACTION_HISTORY"]),
+{
+ id:"M8",directions:"Choose <strong>Ready</strong> from the <strong>Status</strong> dropdown. Type your <strong>first initial</strong>. Then change the Status from Ready to <strong>Finished</strong>.",type:"staged",skills:["ACTION_HISTORY","UPDATE_DIRECTION"],
+ render(ctx){ctx.innerHTML='<div class="grid"><div class="field"><label>Status</label><select id="status"><option value=""></option><option>Ready</option><option>Finished</option></select></div><div class="field"><label>First initial</label><input id="initials" maxlength="1" autocomplete="off"></div></div>';},
+ init(root,state){
+   state.stage=0; const s=root.querySelector("#status"), i=root.querySelector("#initials");
+   s.addEventListener("change",()=>{if(state.stage===0&&s.value==="Ready")state.stage=1; if(state.stage===2&&s.value==="Finished")state.stage=3;});
+   i.addEventListener("input",()=>{if(state.stage===1&&i.value.trim().toLocaleLowerCase()===studentFirstInitial())state.stage=2;});
+ },
+ validate(root,state){return state.stage===3&&root.querySelector("#status").value==="Finished"&&root.querySelector("#initials").value.trim().toLocaleLowerCase()===studentFirstInitial();}
+},
+choice("M9","Select only the button immediately to the <strong>left of STOP</strong>.",["GO","WAIT","STOP"],["WAIT"],["POSITION"],{choiceLayout:"horizontal"}),
+textQ("M10","Type your first name in <strong>Box 2</strong>. Leave Boxes 1 and 3 completely empty.",
+ [{id:"box1",label:"Box 1"},{id:"box2",label:"Box 2"},{id:"box3",label:"Box 3"}],
+ v=>v.box1===""&&sameAsStudentName(v.box2)&&v.box3==="",["COMPLETE_ALL"]),
+processQ("M11","Select <strong>Blue twice</strong> so it ends unselected. Then select <strong>Red once</strong>.",["Red","Blue"],["select:Blue","unselect:Blue","select:Red"],["ACTION_HISTORY"]),
+processQ("M12","Select <strong>Monday</strong> and <strong>Friday</strong>. Before clicking the <strong>Check My Work</strong> button, unselect Monday and select <strong>Thursday</strong> instead.",
+ ["Thursday","Monday","Friday"],["select:Monday","select:Friday","unselect:Monday","select:Thursday"],["UPDATE_DIRECTION"]),
+{
+ id:"M13",directions:"Select only the <strong>smallest number</strong>: 19, 7, 12, 21. Then type that number.",type:"choiceAndText",options:["19","7","12","21"],correct:["7"],skills:["COMPARE","COMPLETE_ALL"]
+},
+processQ("M14","Select <strong>START</strong>. Type <strong>GO</strong>. Unselect START. Then select <strong>FINISH</strong>.",
+ ["FINISH","START"],["select:START","typed:GO","unselect:START","select:FINISH"],["ACTION_HISTORY","SEQUENCE"],{withText:true,textLabel:"Text box",textExact:"GO"}),
+textQ("M15","Read the entire direction before beginning. Type your name in the box labeled <strong>Your Name</strong>. Do not select the green button. Then click the <strong>Check My Work</strong> button.",
+ [{id:"name",label:"Your name"}],v=>sameAsStudentName(v.name),["READ_ALL","INHIBITION"],{extraButton:"Green button",extraButtonClass:"green-button",mustRemainUntouched:true})
+];
+
+const hard = [
+choice("H1","Use John's receipt. Select only the <strong>three most expensive items</strong> he bought.",
+ ["Sandwich","Chips","Cookie","Energy Drink","Fruit","Salad","Water"],["Salad","Sandwich","Energy Drink"],["USE_REFERENCE","COMPARE"],
+ refHTML("John's Receipt",`<table><tr><th>Item</th><th>Price</th></tr><tr><td>Sandwich</td><td>$7.50</td></tr><tr><td>Chips</td><td>$2.25</td></tr><tr><td>Cookie</td><td>$3.00</td></tr><tr><td>Energy Drink</td><td>$4.75</td></tr><tr><td>Fruit</td><td>$1.50</td></tr><tr><td>Salad</td><td>$8.25</td></tr><tr><td>Water</td><td>$2.00</td></tr></table>`)),
+choice("H2","Use the schedule. What time does <strong>Maya start work on Thursday</strong>?",["8:30","9:00","10:00","10:30"],["10:30"],["USE_REFERENCE","LOCATE_INFORMATION"],
+ refHTML("Work Schedule",`<table><tr><th></th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th></tr><tr><th>Maya</th><td>9:00</td><td>9:00</td><td>OFF</td><td>10:30</td></tr><tr><th>Jordan</th><td>8:30</td><td>OFF</td><td>8:30</td><td>8:30</td></tr><tr><th>Alex</th><td>OFF</td><td>10:00</td><td>10:00</td><td>9:00</td></tr></table>`)),
+choice("H3","Use the stocking guide and current inventory. Select only the supplies that are <strong>below their minimum</strong>.",
+ ["Gloves","Masks","Gowns","Wipes"],["Gloves","Gowns"],["USE_REFERENCE","COMPARE","WORKPLACE"],
+ refHTML("Stocking Guide",`<table><tr><th>Supply</th><th>Minimum</th><th>Current</th></tr><tr><td>Gloves</td><td>5</td><td>3</td></tr><tr><td>Masks</td><td>10</td><td>12</td></tr><tr><td>Gowns</td><td>15</td><td>8</td></tr><tr><td>Wipes</td><td>3</td><td>3</td></tr></table>`)),
+{
+ id:"H4",directions:"Use the <strong>Workspace Clean-Up</strong> list. Put the actions in the same order as the list.",type:"order",skills:["USE_REFERENCE","SEQUENCE","WORKPLACE"],
+ correct:["Wipe the table","Throw away trash","Put supplies away","Return to supervisor"],
+ initial:["Put supplies away","Return to supervisor","Wipe the table","Throw away trash"],
+ ...refHTML("Workspace Clean-Up",`<ol><li>Wipe the table</li><li>Throw away trash</li><li>Put supplies away</li><li>Return to supervisor</li></ol>`)
+},
+choice("H5","Use the task list. Select only the tasks that <strong>still need to be completed</strong>.",
+ ["Wipe counter","Restock gloves","Empty trash","Return cart","Clean handles"],["Restock gloves","Return cart"],["USE_REFERENCE","CHECK_WORK"],
+ refHTML("Task List",`<table><tr><th>Task</th><th>Status</th></tr><tr><td>Wipe counter</td><td>✓</td></tr><tr><td>Restock gloves</td><td>☐</td></tr><tr><td>Empty trash</td><td>✓</td></tr><tr><td>Return cart</td><td>☐</td></tr><tr><td>Clean handles</td><td>✓</td></tr></table>`)),
+{
+ id:"H6",directions:"Read your supervisor's message and complete the task. Follow any order the message requires.",type:"supervisor",skills:["USE_REFERENCE","SEQUENCE","COMPLETE_ALL"],
+ options:["Room 4","Room 5","Room 6","Wipe Cart","Return Clipboard","Go to Lunch"],
+ ...refHTML("Supervisor Message",`<p>“Please restock Room 4 and Room 6. Wipe down the cart when you're finished. Bring the clipboard back to me before you go to lunch.”</p>`)
+},
+choice("H7","<strong>Step 1:</strong> Select RED.<br><strong>Step 2:</strong> Select BLUE.<br><strong>Step 3:</strong> If today is a school day, ignore Step 2.",
+ ["RED","BLUE"],["RED"],["UPDATE_DIRECTION","CONDITIONAL","INHIBITION"]),
+choice("H8","Use the directory. Which department is <strong>directly above Radiology</strong>?",
+ ["Pharmacy","Central Services","Laboratory","Admissions"],["Central Services"],["USE_REFERENCE","LOCATE_INFORMATION"],
+ refHTML("Directory",`<table><tr><th>Floor</th><th>Department</th></tr><tr><td>5</td><td>Pharmacy</td></tr><tr><td>4</td><td>Central Services</td></tr><tr><td>3</td><td>Radiology</td></tr><tr><td>2</td><td>Laboratory</td></tr><tr><td>1</td><td>Admissions</td></tr></table>`)),
+choice("H9","Your supervisor asks you to bring every supply that is <strong>below its minimum</strong>. Use the inventory sheet before selecting anything.",
+ ["Gloves","Masks","Gowns","Wipes","Cups","Towels"],["Masks","Gowns","Towels"],["USE_REFERENCE","DETAILS","COMPARE"],
+ refHTML("Inventory Sheet",`<table><tr><th>Supply</th><th>Minimum</th><th>Current</th></tr><tr><td>Gloves</td><td>4</td><td>4</td></tr><tr><td>Masks</td><td>8</td><td>6</td></tr><tr><td>Gowns</td><td>10</td><td>7</td></tr><tr><td>Wipes</td><td>3</td><td>3</td></tr><tr><td>Cups</td><td>12</td><td>15</td></tr><tr><td>Towels</td><td>6</td><td>5</td></tr></table>`)),
+processQ("H10","Select <strong>GLOVES</strong>. Select <strong>MASKS</strong>. Unselect <strong>GLOVES</strong>. Select <strong>GLOVES</strong> again. Unselect <strong>MASKS</strong>. Then click the <strong>Check My Work</strong> button.",
+ ["MASKS","GLOVES"],["select:GLOVES","select:MASKS","unselect:GLOVES","select:GLOVES","unselect:MASKS"],["ACTION_HISTORY","SEQUENCE"]),
+choice("H11","Use Jordan's timecard. On which day did Jordan <strong>arrive the latest</strong>?",
+ ["Monday","Tuesday","Wednesday","Thursday","Friday"],["Tuesday"],["USE_REFERENCE","COMPARE"],
+ refHTML("Jordan's Timecard",`<table><tr><th>Day</th><th>Scheduled</th><th>Arrived</th></tr><tr><td>Monday</td><td>8:30</td><td>8:27</td></tr><tr><td>Tuesday</td><td>8:30</td><td>8:36</td></tr><tr><td>Wednesday</td><td>8:30</td><td>8:31</td></tr><tr><td>Thursday</td><td>8:30</td><td>8:29</td></tr><tr><td>Friday</td><td>8:30</td><td>8:34</td></tr></table>`)),
+choice("H12","Compare the completed work to the stocking guide. Select the <strong>ONE item that does not match the required amount</strong>.",
+ ["Masks","Gloves","Gowns","Wipes","Cups"],["Gowns"],["USE_REFERENCE","CHECK_WORK"],
+ refHTML("Stocking Check",`<table><tr><th>Item</th><th>Required Amount</th><th>Completed Amount</th></tr><tr><td>Masks</td><td>10</td><td>10</td></tr><tr><td>Gloves</td><td>6</td><td>6</td></tr><tr><td>Gowns</td><td>12</td><td>9</td></tr><tr><td>Wipes</td><td>4</td><td>4</td></tr><tr><td>Cups</td><td>8</td><td>8</td></tr></table>`)),
+{
+ id:"H13",directions:"You have <strong>$10.00</strong>. Use the café menu. Select exactly <strong>TWO items</strong> without going over $10.00. <strong>One item must be a drink.</strong>",
+ type:"budget",skills:["USE_REFERENCE","MULTIPLE_CONSTRAINTS"],
+ items:[["Sandwich",6.25,"Food"],["Fruit Cup",3.50,"Food"],["Cookie",2.25,"Food"],["Water",1.50,"Drink"],["Juice",3.25,"Drink"],["Smoothie",5.50,"Drink"]],
+ ...refHTML("Café Menu",`<table><tr><th>Item</th><th>Price</th><th>Type</th></tr><tr><td>Sandwich</td><td>$6.25</td><td>Food</td></tr><tr><td>Fruit Cup</td><td>$3.50</td><td>Food</td></tr><tr><td>Cookie</td><td>$2.25</td><td>Food</td></tr><tr><td>Water</td><td>$1.50</td><td>Drink</td></tr><tr><td>Juice</td><td>$3.25</td><td>Drink</td></tr><tr><td>Smoothie</td><td>$5.50</td><td>Drink</td></tr></table>`)
+},
+choice("H14","Use the reference card. <strong>Which of the choices below belongs in Cabinet B?</strong>",
+ ["Masks","Gowns","Cups","Towels"],["Gowns"],["USE_REFERENCE","TRY_BEFORE_HELP"],
+ refHTML("Supply Cabinets",`<table><tr><th>Cabinet</th><th>Supplies</th></tr><tr><td>A</td><td>Gloves, Masks</td></tr><tr><td>B</td><td>Gowns, Wipes</td></tr><tr><td>C</td><td>Cups, Towels</td></tr></table>`)),
+{
+ id:"H15",directions:"Read all directions before beginning.<br>1) Select START.<br>2) Type READY.<br>3) Select BLUE.<br>4) Change READY to DONE.<br>5) Unselect START.<br>6) <strong>Do not complete steps 1–5. Instead, type FINISHED in the box and click the <strong>Check My Work</strong> button.</strong>",
+ type:"finalBoss",skills:["READ_ALL","INHIBITION"]
+}
+];
+
+const allBanks={easy,medium,hard};
+let game=[], level=0, mistakes=0, helps=0, student="", currentState={}, logs=[];
+
+const $=id=>document.getElementById(id);
+const taskArea=$("taskArea"), feedback=$("feedback"), helpPanel=$("helpPanel");
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function sample5(bank){return shuffle(bank).slice(0,5);}
+function normalizeOption(o,i){return typeof o==="string"?{label:o,key:o}:{label:o.label,key:o.key??("opt"+i)};}
+function sameSet(a,b){return a.length===b.length && a.every(x=>b.includes(x));}
+function sameAsStudentName(value){return value.trim().toLocaleLowerCase()===student.trim().toLocaleLowerCase();}
+function studentFirstInitial(){return student.trim().charAt(0).toLocaleLowerCase();}
+
+function newLog(q){return {id:q.id,skills:q.skills,wrongChecks:0,formalHelp:false,helpOpened:0,resets:0,completed:false};}
+function currentLog(){return logs[level];}
+
+function startGame(){
+ student=$("studentName").value.trim();
+ if(!student){$("startMessage").textContent="Type your name before starting.";return;}
+ game=[...sample5(easy),...sample5(medium),...sample5(hard)];
+ level=0;mistakes=0;helps=0;logs=game.map(newLog);
+ $("startScreen").classList.add("hidden");$("resultScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");
+ renderLevel();
+}
+function updateStats(){
+ $("levelStat").textContent=`Level ${level+1} of 15`;
+ $("mistakeStat").textContent=`Incorrect Checks: ${mistakes}`;
+ $("helpStat").textContent=`Help: ${helps}`;
+ $("progressBar").style.width=`${(level/15)*100}%`;
+}
+function renderLevel(){
+ currentState={selected:new Set(),history:[],touched:new Set()};
+ updateStats(); feedback.textContent="";feedback.className="feedback";helpPanel.classList.add("hidden");$("helpMessage").textContent="";
+ const q=game[level]; $("directions").innerHTML=q.directions;
+ if(q.reference){$("referenceCard").className="card reference"+(q.referenceClass?" "+q.referenceClass:"");$("referenceTitle").textContent=q.referenceTitle||"Reference";$("reference").innerHTML=q.reference;}
+ else{$("referenceCard").className="card reference hidden";$("reference").innerHTML="";}
+ taskArea.innerHTML="";
+ renderQuestion(q);
+}
+function makeChoices(options, state=currentState, layout="grid"){
+ const box=document.createElement("div");
+ if(layout==="horizontal" || layout==="row") box.className="position-row";
+ else if(layout==="vertical" || layout==="column") box.className="choice-column";
+ else box.className="grid";
+ options.map(normalizeOption).forEach(o=>{
+   const b=document.createElement("button");b.type="button";b.className="choice";b.textContent=o.label;b.dataset.key=o.key;
+   b.addEventListener("click",()=>{
+     const selected=state.selected.has(o.key);
+     if(selected){state.selected.delete(o.key);state.history.push("unselect:"+o.key);}
+     else{state.selected.add(o.key);state.history.push("select:"+o.key);}
+     state.touched.add(o.key);b.classList.toggle("selected",!selected);
+   });box.appendChild(b);
+ }); return box;
+}
+function renderFields(q){
+ const box=document.createElement("div");box.className="grid";
+ q.fields.forEach(f=>{
+   const wrap=document.createElement("div");wrap.className="field";
+   const lab=document.createElement("label");lab.htmlFor=f.id;lab.innerHTML="<strong>"+f.label+"</strong>";wrap.appendChild(lab);
+   let input;
+   if(f.kind==="select"){input=document.createElement("select");f.options.forEach(x=>{const op=document.createElement("option");op.value=x;op.textContent=x;input.appendChild(op);});}
+   else{input=document.createElement("input");input.type="text";input.autocomplete="off";}
+   input.id=f.id;wrap.appendChild(input);box.appendChild(wrap);
+ });taskArea.appendChild(box);
+}
+function renderQuestion(q){
+ if(q.type==="choice"){taskArea.appendChild(makeChoices(q.options,currentState,q.choiceLayout||"grid"));}
+ else if(q.type==="fields"){renderFields(q);if(q.extraButton){const b=document.createElement("button");b.type="button";b.textContent=q.extraButton;b.style.marginTop="12px";if(q.extraButtonClass)b.classList.add(q.extraButtonClass);b.addEventListener("click",()=>{currentState.touched.add("extra");});taskArea.appendChild(b);}}
+ else if(q.type==="process"){
+   taskArea.appendChild(makeChoices(q.options));
+   if(q.withText){const w=document.createElement("div");w.className="field";w.style.marginTop="12px";w.innerHTML=`<label><strong>${q.textLabel}</strong></label><input id="processText" autocomplete="off">`;taskArea.appendChild(w);
+     w.querySelector("input").addEventListener("input",e=>{if(e.target.value===q.textExact && !currentState.history.includes("typed:"+q.textExact)) currentState.history.push("typed:"+q.textExact);});
+   }
+ } else if(q.type==="choiceAndText"){taskArea.appendChild(makeChoices(q.options));const w=document.createElement("div");w.className="field";w.style.marginTop="12px";w.innerHTML='<label><strong>Type the number</strong></label><input id="choiceText" autocomplete="off">';taskArea.appendChild(w);}
+ else if(q.type==="fieldSequence"){renderFields(q);currentState.fieldHistory=[];q.fields.forEach(f=>{const el=$(f.id);el.addEventListener("input",()=>{const expected=q.expected[currentState.fieldHistory.length];if(expected&&expected[0]===f.id&&el.value===expected[1])currentState.fieldHistory.push([f.id,el.value]);});});}
+ else if(q.type==="staged"){q.render(taskArea);q.init(taskArea,currentState);}
+ else if(q.type==="order"){currentState.order=[...q.initial];renderOrder();}
+ else if(q.type==="supervisor"){taskArea.appendChild(makeChoices(q.options));}
+ else if(q.type==="budget"){taskArea.appendChild(makeChoices(q.items.map(x=>x[0])));}
+ else if(q.type==="finalBoss"){
+   taskArea.appendChild(makeChoices(["START","BLUE"]));
+   const w=document.createElement("div");w.className="field";w.style.marginTop="12px";w.innerHTML='<label><strong>Text box</strong></label><input id="bossText" autocomplete="off">';taskArea.appendChild(w);
+ }
+}
+function renderOrder(){
+ taskArea.innerHTML="";const list=document.createElement("div");list.className="order-list";
+ currentState.order.forEach((item,i)=>{
+   const row=document.createElement("div");row.className="order-row";
+   row.innerHTML=`<div class="order-num">${i+1}</div><div>${item}</div>`;
+   const ctr=document.createElement("div");ctr.className="order-controls";
+   const up=document.createElement("button");up.type="button";up.textContent="↑";up.setAttribute("aria-label",`Move ${item} up`);up.disabled=i===0;
+   const down=document.createElement("button");down.type="button";down.textContent="↓";down.setAttribute("aria-label",`Move ${item} down`);down.disabled=i===currentState.order.length-1;
+   up.addEventListener("click",()=>{[currentState.order[i-1],currentState.order[i]]=[currentState.order[i],currentState.order[i-1]];renderOrder();});
+   down.addEventListener("click",()=>{[currentState.order[i+1],currentState.order[i]]=[currentState.order[i],currentState.order[i+1]];renderOrder();});
+   ctr.append(up,down);row.appendChild(ctr);list.appendChild(row);
+ });taskArea.appendChild(list);
+}
+function fieldValues(q){const v={};q.fields.forEach(f=>v[f.id]=$(f.id).value);return v;}
+
+function validate(q){
+ if(q.type==="choice") return sameSet([...currentState.selected],q.correct);
+ if(q.type==="fields") return q.validate(fieldValues(q)) && (!q.mustRemainUntouched || !currentState.touched.has("extra"));
+ if(q.type==="process"){
+   if(JSON.stringify(currentState.history)!==JSON.stringify(q.expected)) return false;
+   if(q.withText && $("processText").value!==q.textExact) return false;
+   return true;
+ }
+ if(q.type==="choiceAndText") return sameSet([...currentState.selected],q.correct)&&$("choiceText").value==="7";
+ if(q.type==="fieldSequence") return JSON.stringify(currentState.fieldHistory)===JSON.stringify(q.expected) && q.expected.every(([id,val])=>$(id).value===val);
+ if(q.type==="staged") return q.validate(taskArea,currentState);
+ if(q.type==="order") return JSON.stringify(currentState.order)===JSON.stringify(q.correct);
+ if(q.type==="supervisor"){
+   const h=currentState.history, sel=[...currentState.selected];
+   if(sel.includes("Room 5"))return false;
+   const first=x=>h.indexOf("select:"+x);
+   const r4=first("Room 4"),r6=first("Room 6"),wipe=first("Wipe Cart"),clip=first("Return Clipboard"),lunch=first("Go to Lunch");
+   return [r4,r6,wipe,clip,lunch].every(x=>x>=0)&&wipe>r4&&wipe>r6&&clip>wipe&&lunch>clip&&sameSet(sel,["Room 4","Room 6","Wipe Cart","Return Clipboard","Go to Lunch"]);
+ }
+ if(q.type==="budget"){
+   const chosen=q.items.filter(x=>currentState.selected.has(x[0]));
+   return chosen.length===2 && chosen.reduce((s,x)=>s+x[1],0)<=10 && chosen.some(x=>x[2]==="Drink");
+ }
+ if(q.type==="finalBoss") return currentState.selected.size===0 && $("bossText").value==="FINISHED" && currentState.touched.size===0;
+ return false;
+}
+function checkWork(){
+ const q=game[level];
+ if(validate(q)){
+   currentLog().completed=true;feedback.textContent="Correct. Nice work.";feedback.className="feedback good";
+   $("checkBtn").disabled=true;
+   setTimeout(()=>{ $("checkBtn").disabled=false; level++; if(level>=game.length)finishGame(); else renderLevel();},450);
+ }else{
+   mistakes++;currentLog().wrongChecks++;updateStats();
+   feedback.textContent="Not quite. Something does not match the directions. Reread the ENTIRE direction, check your work, and try again.";
+   feedback.className="feedback bad";
+ }
+}
+function resetLevel(){
+ currentLog().resets++;renderLevel();
+}
+function openHelp(){currentLog().helpOpened++;helpPanel.classList.remove("hidden");$("helpMessage").textContent="";helpPanel.scrollIntoView({behavior:"smooth",block:"nearest"});}
+function askHelp(){if(!currentLog().formalHelp){currentLog().formalHelp=true;helps++;updateStats();}$("helpMessage").textContent="Help request recorded. Ask an adult for help. Be ready to explain what you already read, checked, or tried.";}
+function restartWhole(){
+ if(confirm("Restart the whole challenge? Your current results will be cleared.")){
+   level=0;mistakes=0;helps=0;game=[];logs=[];$("gameScreen").classList.add("hidden");$("resultScreen").classList.add("hidden");$("startScreen").classList.remove("hidden");$("startMessage").textContent="";
+ }
+}
+function outcomeForLog(l){
+  if(l.formalHelp) return "Completed With Help";
+  if(l.wrongChecks > 0) return "Independent After Retry";
+  return "First-Try Accurate";
+}
+function finishGame(){
+ $("gameScreen").classList.add("hidden");$("resultScreen").classList.remove("hidden");
+ $("resultName").textContent=`Nice work, ${student}.`;
+ $("resultMistakes").textContent=`Incorrect Checks: ${mistakes}`;$("resultHelp").textContent=`Help requests: ${helps}`;
+
+ const agg={};
+ logs.forEach(l=>{
+   const outcome=outcomeForLog(l);
+   l.skills.forEach(s=>{
+     agg[s]??={assessed:0,firstTry:0,retry:0,help:0};
+     agg[s].assessed++;
+     if(outcome==="First-Try Accurate") agg[s].firstTry++;
+     else if(outcome==="Independent After Retry") agg[s].retry++;
+     else agg[s].help++;
+   });
+ });
+
+ let html='<table><thead><tr><th>Skill</th><th>Levels Assessed</th><th>First-Try Accurate</th><th>Independent After Retry</th><th>Completed With Help</th></tr></thead><tbody>';
+ Object.entries(agg)
+   .sort((a,b)=>SKILL_LABELS[a[0]].localeCompare(SKILL_LABELS[b[0]]))
+   .forEach(([s,v])=>{
+     html+=`<tr><td>${SKILL_LABELS[s]}</td><td>${v.assessed}</td><td>${v.firstTry}</td><td>${v.retry}</td><td>${v.help}</td></tr>`;
+   });
+ html+="</tbody></table>";
+ $("skillResults").innerHTML=html;
+}
+function downloadResults(){
+ const blob=buildResultsPdf(),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=`workplace-challenge-${student.replace(/[^a-z0-9]+/gi,"-").toLowerCase()||"student"}-results.pdf`;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $("playAgainBtn").classList.remove("hidden");
+ $("downloadBtn").textContent="Download Results Again";
+}
+
+$("startBtn").addEventListener("click",startGame);
+$("studentName").addEventListener("keydown",e=>{if(e.key==="Enter")startGame();});
+$("checkBtn").addEventListener("click",checkWork);
+$("resetLevelBtn").addEventListener("click",resetLevel);
+$("helpBtn").addEventListener("click",openHelp);
+$("tryAgainBtn").addEventListener("click",()=>helpPanel.classList.add("hidden"));
+$("askAnywayBtn").addEventListener("click",askHelp);
+$("restartBtn").addEventListener("click",restartWhole);
+$("playAgainBtn").addEventListener("click",()=>{ $("resultScreen").classList.add("hidden");$("startScreen").classList.remove("hidden");$("studentName").value=student; });
+$("downloadBtn").addEventListener("click",downloadResults);
+})();
+</script>
+</body>
+</html>
